@@ -46,4 +46,6 @@ namespace DirectX
                                   _In_z_ LPCWSTR fileName,
                                   _In_opt_ const GUID* targetFormat = nullptr,
                                   _In_opt_ std::function<void(IPropertyBag2*)> setCustomProps = nullptr );
+
+	HRESULT TakeScreenshot( ID3D11Device* pDevice,IDXGISwapChain* pSwapChain,_In_z_ LPCWSTR filepath );
 }
