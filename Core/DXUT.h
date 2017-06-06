@@ -111,6 +111,12 @@
 #include <memory>
 #include <vector>
 
+// For date string
+#include <iostream>
+#include <iomanip>
+#include <ctime>
+#include <sstream>
+
 #if defined(DEBUG) || defined(_DEBUG)
 #ifndef V
 #define V(x)           { hr = (x); if( FAILED(hr) ) { DXUTTrace( __FILE__, (DWORD)__LINE__, hr, L#x, true ); } }
@@ -159,6 +165,7 @@ struct DXUTD3D11DeviceSettings
     bool AutoCreateDepthStencil; // DXUT will create the depth stencil resource and view if true
     DXGI_FORMAT AutoDepthStencilFormat;
     D3D_FEATURE_LEVEL DeviceFeatureLevel;
+	bool UseDebugLayer;
 };
 
 struct DXUTDeviceSettings
@@ -274,6 +281,13 @@ void    WINAPI DXUTShutdown( _In_ int nExitCode = 0 );
 void    WINAPI DXUTSetIsInGammaCorrectMode( _In_ bool bGammaCorrect );
 bool    WINAPI DXUTGetMSAASwapChainCreated();
 
+//--------------------------------------------------------------------------------------
+// Screen Shots...
+//--------------------------------------------------------------------------------------
+void    WINAPI DXUTSetScreenShotName( _In_ WCHAR* str );
+void    WINAPI DXUTSetScreenShotNameToDateTime();
+void    WINAPI DXUTTakeScreenShot();
+
 
 //--------------------------------------------------------------------------------------
 // State Retrieval  
@@ -324,6 +338,7 @@ float     WINAPI DXUTGetFPS();
 LPCWSTR   WINAPI DXUTGetWindowTitle();
 LPCWSTR   WINAPI DXUTGetFrameStats( _In_ bool bIncludeFPS = false );
 LPCWSTR   WINAPI DXUTGetDeviceStats();
+
 
 bool      WINAPI DXUTIsVsyncEnabled();
 bool      WINAPI DXUTIsRenderingPaused();

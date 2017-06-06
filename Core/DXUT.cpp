@@ -187,6 +187,7 @@ protected:
         D3D_FEATURE_LEVEL  m_OverrideForceFeatureLevel; // if != -1, then overrid to use a featurelevel
         WCHAR m_ScreenShotName[256];        // command line screen shot name
         bool m_SaveScreenShot;              // command line save screen shot
+		bool m_FireOnceScreenShot;			// Meant for screenshot on key press
         bool m_ExitAfterScreenShot;         // command line exit after screen shot
         
         int   m_OverrideAdapterOrdinal;         // if != -1, then override to use this adapter ordinal
@@ -399,6 +400,7 @@ public:
     GET_SET_ACCESSOR( D3D_FEATURE_LEVEL, OverrideForceFeatureLevel );
     GET_ACCESSOR( WCHAR*, ScreenShotName );
     GET_SET_ACCESSOR( bool, SaveScreenShot );
+	GET_SET_ACCESSOR( bool, FireOnceScreenShot );
     GET_SET_ACCESSOR( bool, ExitAfterScreenShot );
     
     GET_SET_ACCESSOR( int, OverrideAdapterOrdinal );
@@ -575,6 +577,8 @@ bool WINAPI DXUTGetMSAASwapChainCreated()
         return false;
     return (psettings->d3d11.sd.SampleDesc.Count > 1);
 }
+
+
 D3D_FEATURE_LEVEL WINAPI DXUTGetD3D11DeviceFeatureLevel()  { return GetDXUTState().GetD3D11FeatureLevel(); }
 IDXGISwapChain* WINAPI DXUTGetDXGISwapChain()              { return GetDXUTState().GetDXGISwapChain(); }
 ID3D11RenderTargetView* WINAPI DXUTGetD3D11RenderTargetView() { return GetDXUTState().GetD3D11RenderTargetView(); }
@@ -1909,7 +1913,7 @@ HRESULT DXUTChangeDevice( DXUTDeviceSettings* pNewDeviceSettings,
         DXUTCleanup3DEnvironment( false );
 
     // Create the D3D device and call the app's device callbacks
-    hr = DXUTCreate3DEnvironment11();
+	hr = DXUTCreate3DEnvironment11();
     if( FAILED( hr ) )
     {
         SAFE_DELETE( pOldDeviceSettings );
@@ -2406,16 +2410,21 @@ HRESULT DXUTCreate3DEnvironment11()
         }
         ddt = D3D_DRIVER_TYPE_UNKNOWN;    
     }
-    else if (pNewDeviceSettings->d3d11.DriverType == D3D_DRIVER_TYPE_WARP) 
+    else if ( pNewDeviceSettings->d3d11.DriverType == D3D_DRIVER_TYPE_WARP ) 
     {
         ddt = D3D_DRIVER_TYPE_WARP;  
         pAdapter = nullptr;
     }
-    else if (pNewDeviceSettings->d3d11.DriverType == D3D_DRIVER_TYPE_REFERENCE) 
+    else if ( pNewDeviceSettings->d3d11.DriverType == D3D_DRIVER_TYPE_REFERENCE ) 
     {
         ddt = D3D_DRIVER_TYPE_REFERENCE;
         pAdapter = nullptr;
     }
+
+	if ( pNewDeviceSettings->d3d11.UseDebugLayer )
+	{
+		pNewDeviceSettings->d3d11.CreateFlags |= D3D11_CREATE_DEVICE_DEBUG;
+	}
 
     if( SUCCEEDED( hr ) )
     {
@@ -2879,6 +2888,12 @@ void WINAPI DXUTRender3DEnvironment()
     if ( GetDXUTState().GetSaveScreenShot() )
     {
         DXUTSnapD3D11Screenshot( GetDXUTState().GetScreenShotName(), false );
+
+		if ( GetDXUTState().GetFireOnceScreenShot() )
+		{
+			GetDXUTState().SetFireOnceScreenShot( false );
+			GetDXUTState().SetSaveScreenShot( false );
+		}
     }
     if ( GetDXUTState().GetExitAfterScreenShot() )
     {
@@ -4290,6 +4305,31 @@ void WINAPI DXUTSetConstantFrameTime( bool bEnabled, float fTimePerFrame )
     GetDXUTState().SetTimePerFrame( fTimePerFrame );
 }
 
+//--------------------------------------------------------------------------------------
+// Screen Shots
+//--------------------------------------------------------------------------------------
+
+void WINAPI DXUTSetScreenShotName( _In_ WCHAR* str )
+{
+	swprintf_s( GetDXUTState().GetScreenShotName(), 256, L"%ls.bmp", str );
+}
+
+void WINAPI DXUTSetScreenShotNameToDateTime()
+{
+	auto t = std::time( nullptr );
+	auto tm = *std::localtime( &t );
+
+	std::wstringstream datetime;
+	datetime << std::put_time( &tm, L"%d-%m-%Y %H-%M-%S" );
+	
+	DXUTSetScreenShotName( const_cast< WCHAR* >( datetime.str().c_str() ) );
+}
+
+void WINAPI DXUTTakeScreenShot()
+{
+	GetDXUTState().SetSaveScreenShot( true );
+	GetDXUTState().SetFireOnceScreenShot( true );
+}
 
 //--------------------------------------------------------------------------------------
 // Resets the state associated with DXUT 
@@ -4299,7 +4339,6 @@ void WINAPI DXUTResetFrameworkState()
     GetDXUTState().Destroy();
     GetDXUTState().Create();
 }
-
 
 //--------------------------------------------------------------------------------------
 // Closes down the window.  When the window closes, it will cleanup everything
