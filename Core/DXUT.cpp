@@ -4311,7 +4311,7 @@ void WINAPI DXUTSetConstantFrameTime( bool bEnabled, float fTimePerFrame )
 
 void WINAPI DXUTSetScreenShotName( _In_ WCHAR* str )
 {
-	swprintf_s( GetDXUTState().GetScreenShotName(), 256, L"%ls.bmp", str );
+	swprintf_s( GetDXUTState().GetScreenShotName(), 256, L"../../media/ScreenShots/%ls.bmp", str );
 }
 
 void WINAPI DXUTSetScreenShotNameToDateTime()
