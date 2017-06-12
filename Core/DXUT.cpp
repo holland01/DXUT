@@ -4317,7 +4317,8 @@ void WINAPI DXUTSetScreenShotName( _In_ WCHAR* str )
 void WINAPI DXUTSetScreenShotNameToDateTime()
 {
 	auto t = std::time( nullptr );
-	auto tm = *std::localtime( &t );
+	struct tm tm;
+	localtime_s( &tm, &t );
 
 	std::wstringstream datetime;
 	datetime << std::put_time( &tm, L"%d-%m-%Y %H-%M-%S" );
